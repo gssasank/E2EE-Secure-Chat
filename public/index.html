@@ -1,34 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <title>Secure Chat</title>
-    <meta name="description" content="A minimalist, open-source, end-to-end RSA-2048 encrypted chat application.">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
-    <link href="/styles.css" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <title>E2EE Chat</title>
   </head>
-  <body>
-    <div id="vue-instance">
-      <!-- Add Chat Container Here -->
-      <div class="info-container full-width">
-        <!-- Add Room UI Here -->
-        <div class="notification-list" ref="notificationContainer">
-          <h1>NOTIFICATION LOG</h1>
-          <div class="notification full-width" v-for="notification in notifications">
-            <div class="notification-timestamp">{{ notification.timestamp }}</div>
-            <div class="notification-message">{{ notification.message }}</div>
+  <body class="bg-gray-700">
+    <div id="vue-instance" class="flex overflow-hidden">
+      <section
+        class="
+          fixed
+          w-1/4
+          h-screen
+          bg-gray-800
+          p-4
+          break-all
+          font-bold
+          my-16
+          text-gray-300
+        "
+      >
+        <h1>CHATROOM</h1>
+        <div>
+          <input
+            type="text"
+            text-xs
+            class="full-width text-black p-1"
+            placeholder="Room Name"
+            id="room-input"
+            v-model="pendingRoom"
+            @keyup.enter="joinRoom()"
+          />
+          <input
+            type="submit"
+            v-on:click="joinRoom()"
+            value="JOIN"
+            class="text-black p-1"
+          />
+        </div>
+        <div class="pt-1 my-2 bg-gray-300"></div>
+
+        <div class="text-xs">
+          <h1 class="text-lg">Public Keys</h1>
+          <div class="pt-1 my-2 bg-gray-300"></div>
+
+          <h2>THEIR PUBLIC KEY</h2>
+          <div v-if="destinationPublicKey" class="text-red-700">
+            <p>{{ destinationPublicKey }}</p>
+          </div>
+          <h2 v-else>Waiting for second user to join room...</h2>
+          <div class="pt-1 my-2 bg-gray-300"></div>
+          <h2>YOUR PUBLIC KEY</h2>
+          <div v-if="originPublicKey" class="text-green-700">
+            <p>{{ originPublicKey }}</p>
+          </div>
+          <div class="keypair-loader full-width" v-else>
+            <div class="center-x loader"></div>
+            <h2 class="center-text">Generating Keypair...</h2>
           </div>
         </div>
-        <div class="flex-fill"></div>
-        <!-- Add Encryption Key UI Here -->
-      </div>
-      <!-- Add Bottom Bar Here -->
+      </section>
+      <section class="bg-gray-700 w-full flex flex-col">
+        <!-- Top Bar -->
+        <div
+          class="
+            fixed
+            h-16
+            pt-2
+            text-white
+            flex
+            justify-center
+            top-0
+            w-full
+            bg-gray-900
+          "
+        >
+          <div class="my-3 text-green-100 font-bold text-lg">
+            End-to-End Encrypted Chat App
+          </div>
+        </div>
+        <!-- Chat section -->
+        <div class="mt-20 mb-16 ml-96 w-3/4 flex flex-col">
+          <div v-for="message in messages" class="flex">
+            <div
+              v-bind:class="(message.sender == originPublicKey) ? 'flex-grow' : ''"
+            ></div>
+            <div
+              class="mx-4 my-2 p-2 rounded-lg flex"
+              v-bind:class="(message.sender == originPublicKey) ? 'bg-blue-300 justify-end' :'bg-gray-300' "
+            >
+              {{ message.text }}
+            </div>
+          </div>
+        </div>
+        <!-- Text Message Area -->
+        <div class="flex w-full fixed justify-between bg-gray-900 bottom-0">
+          <input
+            class="
+              flex-grow
+              m-2
+              py-2
+              px-4
+              mr-1
+              rounded-full
+              border border-gray-300
+              bg-gray-200
+              resize-none
+              outline-none
+            "
+            rows="1"
+            placeholder="Message..."
+            v-model="draft"
+            @keyup.enter="sendMessage()"
+          />
+        </div>
+      </section>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.1/vue.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.slim.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
-    <script src="/page.js"></script>
   </body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.4.1/vue.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.slim.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+  <script src="/page.js"></script>
 </html>
